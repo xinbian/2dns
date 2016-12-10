@@ -8,10 +8,11 @@ Created on Sun Nov 27 15:14:22 2016
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import numpy as np
 import sys
 import os.path
-import numpy.fft as fft
+from numpy import *
+from numpy.fft import fftfreq , fft , ifft , irfft2 , rfft2, fft2, ifft2, fftshift, ifftshift
+from mpi4py import MPI
 parent = os.path.abspath(os.path.join(os.path.dirname(__file__),'.'))
 sys.path.append(parent)
 
@@ -38,14 +39,14 @@ diag_out_step = 5000; #step frequency of outputting diagnostics
 
 
 #-----------GRID setup-----------
-Lx=2*np.pi;
-Ly=2*np.pi;
+Lx=2*pi;
+Ly=2*pi;
 dx=Lx/Nx;
 dy=Ly/Ny;
-x=np.zeros((Nx, Ny), dtype=np.float);
-y=np.zeros((Nx, Ny), dtype=np.float);
-kx=np.zeros((Nx, Ny), dtype=np.float);
-ky=np.zeros((Nx, Ny), dtype=np.float);
+x=zeros((Nx, Ny), dtype=float);
+y=zeros((Nx, Ny), dtype=float);
+kx=zeros((Nx, Ny), dtype=float);
+ky=zeros((Nx, Ny), dtype=float);
 for j in range(Ny):
     kx[0:Nx,j]=range(-Nx/2, Nx/2);
     x[0:Nx,j] =range(-Nx/2, Nx/2);
@@ -60,11 +61,11 @@ for i in range(Nx):
          if(k2[i,j] == 0):
              k2[i,j]=1e-5; #so that I do not divide by 0 below when using projection operator
 
-k2_exp=np.exp(-nu*(k2**5)*dt-nu_hypo*dt);
+k2_exp=exp(-nu*(k2**5)*dt-nu_hypo*dt);
 
 #-----------Force setup----------
-Fxhat = np.zeros((Nx, Ny), dtype=np.complex);
-Fyhat = np.zeros((Nx, Ny), dtype=np.complex);
+Fxhat = zeros((Nx, Ny), dtype=complex);
+Fyhat = zeros((Nx, Ny), dtype=complex);
 for iss in [-1, 1]:
     for jss in [-1, 1]:
         for i in range(Nx):
@@ -82,18 +83,18 @@ Fyhat=0.0*Fyhat
 
 
 #-----------Variables------------
-Vxhat=np.zeros((Nx, Ny), dtype=np.complex);
-Vyhat=np.zeros((Nx, Ny), dtype=np.complex);
-Wzhat=np.zeros((Nx, Ny), dtype=np.complex);
-Vx=np.zeros((Nx, Ny), dtype=np.float);
-Vy=np.zeros((Nx, Ny), dtype=np.float);
-Wz=np.zeros((Nx, Ny), dtype=np.float);
+Vxhat=zeros((Nx, Ny), dtype=complex);
+Vyhat=zeros((Nx, Ny), dtype=complex);
+Wzhat=zeros((Nx, Ny), dtype=complex);
+Vx=zeros((Nx, Ny), dtype=float);
+Vy=zeros((Nx, Ny), dtype=float);
+Wz=zeros((Nx, Ny), dtype=float);
 
 
 #----Initialize: Taylor-Green Velocity in Fourier space-----------
 if (new==1):
-    Vxhat = np.zeros((Nx, Ny), dtype=np.complex);
-    Vyhat = np.zeros((Nx, Ny), dtype=np.complex);
+    Vxhat = zeros((Nx, Ny), dtype=complex);
+    Vyhat = zeros((Nx, Ny), dtype=complex);
     for iss in [-1, 1]:
         for jss in [-1, 1]:
             for i in range(Nx):
@@ -106,11 +107,11 @@ if (new==1):
     Vxhat=0.5*Vxhat;     
     Vyhat=0.5*Vyhat;
     
-    Vx=10*np.random.rand(Nx,Ny)
-    Vy=10*np.random.rand(Nx,Ny)
+    Vx=10*random.rand(Nx,Ny)
+    Vy=10*random.rand(Nx,Ny)
     
-    Vxhat = (fft.fftshift(fft.fft2(fft.ifftshift(Vx))));
-    Vyhat = (fft.fftshift(fft.fft2(fft.ifftshift(Vy))));
+    Vxhat = (fftshift(fft2(ifftshift(Vx))));
+    Vyhat = (fftshift(fft2(ifftshift(Vy))));
     
 #----read from data---------
 else:
@@ -121,7 +122,7 @@ else:
 #------Dealiasing------------------------------------------------
 for i in range(Nx):
       for j in range(Ny):
-          if(np.sqrt(k2[i,j]) >= Nx/3.):
+          if(sqrt(k2[i,j]) >= Nx/3.):
               #print k2[i,j]
               Vxhat[i,j]=0;
               Vyhat[i,j]=0;
@@ -152,14 +153,14 @@ for istep in range(Nstep):
     #Calculate Vorticity
     Wzhat = 1j*(kx*Vyhat - ky*Vxhat);
     #fileds in x-space
-    Vx=fft.fftshift(fft.ifft2(fft.ifftshift(Vxhat))).real;
-    Vy=fft.fftshift(fft.ifft2(fft.ifftshift(Vyhat))).real;
-    Wz=fft.fftshift(fft.ifft2(fft.ifftshift(Wzhat))).real;
+    Vx=fftshift(ifft2(ifftshift(Vxhat))).real;
+    Vy=fftshift(ifft2(ifftshift(Vyhat))).real;
+    Wz=fftshift(ifft2(ifftshift(Wzhat))).real;
     
     #Fields in Fourier Space
-    Vxhat = (fft.fftshift(fft.fft2(fft.ifftshift(Vx))));
-    Vyhat = (fft.fftshift(fft.fft2(fft.ifftshift(Vy))));
-    Wzhat = (fft.fftshift(fft.fft2(fft.ifftshift(Wz))));
+    Vxhat = (fftshift(fft2(ifftshift(Vx))));
+    Vyhat = (fftshift(fft2(ifftshift(Vy))));
+    Wzhat = (fftshift(fft2(ifftshift(Wz))));
    
     #Calculate non-linear term in x-space
     NLx =  Vy*Wz;
@@ -167,15 +168,15 @@ for istep in range(Nstep):
     
     
     #move non-linear term back to Fourier k-space
-    NLxhat = (fft.fftshift(fft.fft2(fft.ifftshift(NLx))));
-    NLyhat = (fft.fftshift(fft.fft2(fft.ifftshift(NLy))));
+    NLxhat = (fftshift(fft2(ifftshift(NLx))));
+    NLyhat = (fftshift(fft2(ifftshift(NLy))));
  
 
     
     #------Dealiasing------------------------------------------------
     for i in range(Nx):
         for j in range(Ny):
-            if(np.sqrt(k2[i,j]) >= Nx/3.):
+            if(sqrt(k2[i,j]) >= Nx/3.):
                 NLxhat[i,j]=0;
                 NLyhat[i,j]=0;
                 
