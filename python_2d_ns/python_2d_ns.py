@@ -22,19 +22,14 @@ new=1;
 forcing=1;
 
 Nstep=5001; #no. of steps
-Nx=64; #grid size
-Ny=64;
+N=Nx=Ny=64;
 t=0;
 
 nu=5e-10; #viscosity
 nu_hypo=2e-3; #hypo-viscosity
 dt=5e-4; #time-step
 dt_h=dt/2; #half-time step
-init_cond = 'IC_TaylorGreen';
-k_ic=1;         #for Taylor-Green init_cond
-force_cond = 'F_TaylorGreen';
-k_f=2;          #for Taylor-Green forcing
-
+k_ic=2;  #1 for Taylor-Green init_cond; 2 for random init_cond
 diag_out_step = 5000; #step frequency of outputting diagnostics
 
 #------------MPI setup---------
@@ -45,19 +40,22 @@ rank = comm.Get_rank()
 Np = Nx/num_processes
 
 #---------modifited 2d FFT and IFFT
-#def ifftn_mpi(fu, u):
-#    Uc_hat[:]=ifft(fu , axis=0)
-#    comm.Alltoall([Uc_hat, MPI.DOUBLE_COMPLEX], [U_mpi, MPI.DOUBLE_COMPLEX])
-#    Uc_hatT[:] = rollaxis(U_mpi, 1).reshape(Uc_hatT.shape)
-#    u[:]= ifft (Uc_hatT, axis =1)
-#    return u
-#def fftn_mpi(u, fu):
-#    Uc_hatT[:] = fft(u, axis=1)
-#    U_mpi[:] = rollaxis(Uc_hatT.reshape(Np, num_processes, Np), 1)
-#    comm.Alltoall([U_mpi, MPI.DOUBLE_COMPLEX], [fu, MPI.DOUBLE_COMPLEX])
-#    fu[:]= fft(fu, axis=0)
-#    return fu  
-#
+Uc_hat = empty(( N, Np) , dtype = complex )
+Uc_hatT = empty((Np,N) , dtype = complex )
+U_mpi = empty (( num_processes , Np , Np ) , dtype = complex )
+def ifftn_mpi(fu, u):
+    Uc_hat[:]=fftshift(ifft(ifftshift(fu) , axis=0))
+    comm.Alltoall([Uc_hat, MPI.DOUBLE_COMPLEX], [U_mpi, MPI.DOUBLE_COMPLEX])
+    Uc_hatT[:] = rollaxis(U_mpi, 1).reshape(Uc_hatT.shape)
+    u[:]= fftshift(ifft (ifftshift(Uc_hatT), axis =1))
+    return u
+def fftn_mpi(u, fu):
+    Uc_hatT[:] = fftshift(fft(ifftshift(u), axis=1))
+    U_mpi[:] = rollaxis(Uc_hatT.reshape(Np, num_processes, Np), 1)
+    comm.Alltoall([U_mpi, MPI.DOUBLE_COMPLEX], [fu, MPI.DOUBLE_COMPLEX])
+    fu[:]= fftshift(fft(ifftshift(fu), axis=0))
+    return fu  
+
 #-----------GRID setup-----------
 Lx=2*pi;
 Ly=2*pi;
@@ -71,11 +69,11 @@ ky=zeros((Nx, Np), dtype=float);
 for j in range(Ny):
     x[0:Np,j]=range(Np);
 x=x-(num_processes/2-rank)*Np
-#x=x*dx;
+x=x*dx;
 
 for i in range(Np):
     y[i,0:Ny] =range(-Ny/2, Ny/2);
-#y=y*dy;
+y=y*dy;
 
 for j in range(Np):
     kx[0:Nx,j]=range(-Nx/2, Nx/2);
@@ -92,7 +90,7 @@ for i in range(Nx):
 k2_exp=exp(-nu*(k2**5)*dt-nu_hypo*dt);
 
 #---------dealiasing function----
-def delias():
+def delias(Vxhat, Vyhat):
     for i in range(Nx):
         for j in range(Np):
             if(sqrt(k2[i,j]) >= Nx/3.):
@@ -105,75 +103,62 @@ def delias():
     return Vxhat, Vyhat
 
 
-#-----------Force setup----------
-#Fxhat = zeros((Nx, Np), dtype=complex);
-#Fyhat = zeros((Nx, Np), dtype=complex);
-#for iss in [-1, 1]:
-#    for jss in [-1, 1]:
-#        for i in range(Nx):
-#            for j in range(Ny):
-#                if(int(kx[i,j])==iss*k_f and int(ky[i,j])==jss*k_f):
-#                    Fxhat[i,j] = -1j*iss;
-#                    Fyhat[i,j] = -1j*(-jss);
-#                
-#Fxhat=5e-2*Fxhat;     
-#Fyhat=5e-2*Fyhat;
-#
-##assume no foricng
-#Fxhat=0.0*Fxhat
-#Fyhat=0.0*Fyhat
-#
-
 #-----------Variables------------
 Vxhat=zeros((Nx, Np), dtype=complex);
 Vyhat=zeros((Nx, Np), dtype=complex);
 Wzhat=zeros((Nx, Np), dtype=complex);
+NLxhat=zeros((Nx, Np), dtype=complex);
+NLyhat=zeros((Nx, Np), dtype=complex);
 Vx=zeros((Np, Ny), dtype=float);
 Vy=zeros((Np, Ny), dtype=float);
 Wz=zeros((Np, Ny), dtype=float);
+Wz_all=zeros((Nx, Ny), dtype=float);
 
 
 ##----Initialize: Taylor-Green Velocity in Fourier space-----------
-if (new==1):
-#    Vxhat = zeros((Nx, Ny), dtype=complex);
-#    Vyhat = zeros((Nx, Ny), dtype=complex);
-#    for iss in [-1, 1]:
-#        for jss in [-1, 1]:
-#            for i in range(Nx):
-#                for j in range(Ny):
-#                    if(int(kx[i,j])==iss*k_ic and int(ky[i,j])==jss*k_ic):
-#                        Vxhat[i,j] = -1j*iss;
-#                        Vyhat[i,j] = -1j*(-jss);
+if (new==1 and k_ic==1):
+    Vxhat = zeros((Nx, Np), dtype=complex);
+    Vyhat = zeros((Nx, Np), dtype=complex);
+    for iss in [-1, 1]:
+        for jss in [-1, 1]:
+            for i in range(Nx):
+                for j in range(Np):
+                    if(int(kx[i,j])==iss*k_ic and int(ky[i,j])==jss*k_ic):
+                        Vxhat[i,j] = -1j*iss;
+                        Vyhat[i,j] = -1j*(-jss);
 #                
 ##Set total energy to 1
-#    Vxhat=0.5*Vxhat;     
-#    Vyhat=0.5*Vyhat;
-#    
+    Vxhat=0.5*Vxhat;     
+    Vyhat=0.5*Vyhat;
+elif (new==1 and k_ic==2):
     Vx=10*random.rand(Np,Ny)
     Vy=10*random.rand(Np,Ny)
-#    
-    Vxhat = (fftshift(fft2(ifftshift(Vx))));
-    Vyhat = (fftshift(fft2(ifftshift(Vy))));
+    Vxhat=fftn_mpi(Vx, Vxhat)
+    Vyhat=fftn_mpi(Vy, Vyhat)
+   
+#    Vxhat = (fftshift(fft2(ifftshift(Vx))));
+#    Vyhat = (fftshift(fft2(ifftshift(Vy))));
 #    
 ##----read from data---------
 else:
     Vxhat = Vxhat_restart;
     Vyhat = Vyhat_restart;
-#
-#
-##------Dealiasing------------------------------------------------
-for i in range(Nx):
-     for j in range(Np):
-          if(sqrt(k2[i,j]) >= Nx/3.):
-              #print k2[i,j]
-              Vxhat[i,j]=0;
-              Vyhat[i,j]=0;
-#
-#
-#------Projection operator on velocity fields to make them solenoidal-----
-tmp = (kx*Vxhat + ky*Vyhat)/k2;
-Vxhat = Vxhat - kx*tmp;
-Vyhat = Vyhat - ky*tmp;
+#----output vorticity function----
+#def output(Wz, rank):
+#    for i in range(1,num_processes):
+#        if rank==i:
+#            comm.send(Wz, dest=0, tag=i) 
+#    if rank==0:
+#        for i in range(1,num_processes):
+#            Wz_all[i*Np,:]=comm.recv(source=i, tag=i)
+#if rank == 0:
+##   data = {'a': 7, 'b': 3.14}
+#   comm.send(data, dest=1, tag=11)
+#elif rank == 1:
+#   data = comm.recv(source=0, tag=11)
+        
+#------Dealiasing------------------------------------------------
+Vxhat, Vyhat=delias(Vxhat, Vyhat)
 #
 #------Storing variables for later use in time integration--------
 Vxhat_t0 = Vxhat;
@@ -195,14 +180,20 @@ for istep in range(Nstep):
     #Calculate Vorticity
     Wzhat = 1j*(kx*Vyhat - ky*Vxhat);
     #fileds in x-space
-    Vx=fftshift(ifft2(ifftshift(Vxhat))).real;
-    Vy=fftshift(ifft2(ifftshift(Vyhat))).real;
-    Wz=fftshift(ifft2(ifftshift(Wzhat))).real;
+    #Vx=fftshift(ifft2(ifftshift(Vxhat))).real;
+    Vx=ifftn_mpi(Vxhat,Vx)
+    #Vy=fftshift(ifft2(ifftshift(Vyhat))).real;
+    Vy=ifftn_mpi(Vyhat,Vy)
+    #Wz=fftshift(ifft2(ifftshift(Wzhat))).real;
+    Wz=ifftn_mpi(Wzhat,Wz)
     
     #Fields in Fourier Space
-    Vxhat = (fftshift(fft2(ifftshift(Vx))));
-    Vyhat = (fftshift(fft2(ifftshift(Vy))));
-    Wzhat = (fftshift(fft2(ifftshift(Wz))));
+    #Vxhat = (fftshift(fft2(ifftshift(Vx))));
+    #Vyhat = (fftshift(fft2(ifftshift(Vy))));
+    #Wzhat = (fftshift(fft2(ifftshift(Wz))));
+    Vxhat=fftn_mpi(Vx, Vxhat)
+    Vyhat=fftn_mpi(Vy, Vyhat)
+    Wzhat=fftn_mpi(Wz, Wzhat)
    
     #Calculate non-linear term in x-space
     NLx =  Vy*Wz;
@@ -210,20 +201,13 @@ for istep in range(Nstep):
     
     
     #move non-linear term back to Fourier k-space
-    NLxhat = (fftshift(fft2(ifftshift(NLx))));
-    NLyhat = (fftshift(fft2(ifftshift(NLy))));
+    #NLxhat = (fftshift(fft2(ifftshift(NLx))));
+    #NLyhat = (fftshift(fft2(ifftshift(NLy))));
+    NLxhat=fftn_mpi(NLx, NLxhat)
+    NLyhat=fftn_mpi(NLy, NLyhat)
     
     #------Dealiasing------------------------------------------------
-    for i in range(Nx):
-        for j in range(Np):
-            if(sqrt(k2[i,j]) >= Nx/3.):
-                NLxhat[i,j]=0;
-                NLyhat[i,j]=0;
-                
-    #------Projection operator on velocity fields to make them solenoidal-----
-    tmp = (kx*NLxhat + ky*NLyhat)/k2;
-    NLxhat = NLxhat - kx*tmp;
-    NLyhat = NLyhat - ky*tmp;
+    Vxhat, Vyhat=delias(Vxhat, Vyhat)
     
     #Integrate in time
     #---Euler for 1/2-step-----------
@@ -242,13 +226,14 @@ for istep in range(Nstep):
           Vyhat = Vyhat + dt*(1.5*NLyhat - 0.5*oNLyhat*k2_exp);
           Vxhat = Vxhat*k2_exp;
           Vyhat = Vyhat*k2_exp;
-          Vxhat = Vxhat + dt*Fxhat;
-          Vyhat = Vyhat + dt*Fyhat;
+          Vxhat = Vxhat;
+          Vyhat = Vyhat;
 
           oNLxhat=NLxhat;
           oNLyhat=NLyhat;
           
-    if(istep%diag_out_step==0):
+    if(istep%diag_out_step==0 and rank==1):
         plt.contourf(x, y, Wz)
         plt.show()
+        plt.savefig('myfig')
     t=t+dt;
