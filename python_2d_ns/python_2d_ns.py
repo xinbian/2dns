@@ -10,7 +10,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-import pylab
 import os.path
 import numpy.fft as fft
 parent = os.path.abspath(os.path.join(os.path.dirname(__file__),'.'))
@@ -22,20 +21,20 @@ new=1;
 forcing=1;
 
 Nstep=5001; #no. of steps
-Nx=32; #grid size
-Ny=32;
+Nx=64; #grid size
+Ny=64;
 t=0;
 
 nu=5e-10; #viscosity
 nu_hypo=2e-3; #hypo-viscosity
-dt=5e-7; #time-step
+dt=5e-4; #time-step
 dt_h=dt/2; #half-time step
 init_cond = 'IC_TaylorGreen';
 k_ic=1;         #for Taylor-Green init_cond
 force_cond = 'F_TaylorGreen';
 k_f=2;          #for Taylor-Green forcing
 
-diag_out_step = 500; #step frequency of outputting diagnostics
+diag_out_step = 5000; #step frequency of outputting diagnostics
 
 
 #-----------GRID setup-----------
@@ -77,6 +76,10 @@ for iss in [-1, 1]:
 Fxhat=5e-2*Fxhat;     
 Fyhat=5e-2*Fyhat;
 
+#assume no foricng
+Fxhat=0.0*Fxhat
+Fyhat=0.0*Fyhat
+
 
 #-----------Variables------------
 Vxhat=np.zeros((Nx, Ny), dtype=np.complex);
@@ -102,6 +105,13 @@ if (new==1):
 #Set total energy to 1
     Vxhat=0.5*Vxhat;     
     Vyhat=0.5*Vyhat;
+    
+    Vx=10*np.random.rand(Nx,Ny)
+    Vy=10*np.random.rand(Nx,Ny)
+    
+    Vxhat = (fft.fftshift(fft.fft2(fft.ifftshift(Vx))));
+    Vyhat = (fft.fftshift(fft.fft2(fft.ifftshift(Vy))));
+    
 #----read from data---------
 else:
     Vxhat = Vxhat_restart;
