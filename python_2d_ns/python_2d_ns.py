@@ -16,11 +16,12 @@ from mpi4py import MPI
 parent = os.path.abspath(os.path.join(os.path.dirname(__file__),'.'))
 sys.path.append(parent)
 
+
 #parameters
 new=1;
 forcing=1; #forcing type
-Nstep=5001; #no. of steps
-N=Nx=Ny=64; #grid size
+Nstep=3; #no. of steps
+N=Nx=Ny=1024; #grid size
 t=0;
 nu=5e-10; #viscosity
 nu_hypo=2e-3; #hypo-viscosity
@@ -36,6 +37,7 @@ num_processes = comm.Get_size()
 rank = comm.Get_rank()
 #slab decomposition, split arrays in x direction in physical space, in ky direction in Fourier space
 Np = N/num_processes
+
 
 
 #---------declare functions that will be used----------
@@ -71,6 +73,8 @@ def IC_coor(Nx, Ny, Np, dx, dy, rank, num_processes):
 	    x[0:Np,j]=range(Np);
     #offset for different threads
     x=x-(num_processes/2-rank)*Np
+    if num_processes ==1:
+        x=
     x=x*dx;
     for i in range(Np):
 	    y[i,0:Ny] =range(-Ny/2, Ny/2);
@@ -193,6 +197,8 @@ Vyhat_t0 = Vyhat;
 #
 #----Main Loop-----------
 for istep in range(Nstep):
+    if rank==0:
+        wt=MPI.Wtime()
     #------Dealiasing
     Vxhat, Vyhat=delias(Vxhat, Vyhat, Nx, Np, k2)
     #Calculate Vorticity
@@ -245,6 +251,7 @@ for istep in range(Nstep):
     if(istep%diag_out_step==0):
         output(Wz, x, y, Nx, Ny, rank, t)
     t=t+dt;
-
-
+    if rank==0:
+        print 'simulation time'
+        print MPI.Wtime()-wt
 
