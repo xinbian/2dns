@@ -13,12 +13,12 @@ python 2D NS
         :target: https://python-2d-ns.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://pyup.io/repos/github/xinbian/python_2d_ns/shield.svg
-     :target: https://pyup.io/repos/github/xinbian/python_2d_ns/
+.. image:: https://pyup.io/repos/github/xinbian/2dns/shield.svg
+     :target: https://pyup.io/repos/github/xinbian/2dns/
      :alt: Updates
 
-.. image:: https://coveralls.io/repos/github/xinbian/python_2d_ns/badge.png?branch=master
-      :target: https://coveralls.io/github/xinbian/python_2d_ns?branch=master
+.. image:: https://coveralls.io/repos/github/xinbian/2dns/badge.png?branch=master
+      :target: https://coveralls.io/github/xinbian/2dns?branch=master
 
 solve a 2D NS equation
 
