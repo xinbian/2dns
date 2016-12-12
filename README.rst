@@ -3,14 +3,14 @@ python 2D NS
 ===============================
 
 
-.. image:: https://img.shields.io/pypi/v/python_2d_ns.svg
-        :target: https://pypi.python.org/pypi/python_2d_ns
+.. image:: https://img.shields.io/pypi/v/2dns.svg
+        :target: https://pypi.python.org/pypi/2dns
 
-.. image:: https://img.shields.io/travis/xinbian/python_2d_ns.svg
-        :target: https://travis-ci.org/xinbian/python_2d_ns
+.. image:: https://img.shields.io/travis/xinbian/2dns.svg
+        :target: https://travis-ci.org/xinbian/2dns
 
-.. image:: https://readthedocs.org/projects/python-2d-ns/badge/?version=latest
-        :target: https://python-2d-ns.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/2dns/badge/?version=latest
+        :target: https://2dns.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 .. image:: https://pyup.io/repos/github/xinbian/2dns/shield.svg
