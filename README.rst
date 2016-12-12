@@ -3,19 +3,12 @@ python 2D NS
 ===============================
 
 
-.. image:: https://img.shields.io/pypi/v/2dns.svg
-        :target: https://pypi.python.org/pypi/2dns
-
 .. image:: https://img.shields.io/travis/xinbian/2dns.svg
         :target: https://travis-ci.org/xinbian/2dns
 
-.. image:: https://readthedocs.org/projects/2dns/badge/?version=latest
-        :target: https://2dns.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/2dns-2/badge/?version=latest
+        :target: https://2dns-2.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
-
-.. image:: https://pyup.io/repos/github/xinbian/2dns/shield.svg
-     :target: https://pyup.io/repos/github/xinbian/2dns/
-     :alt: Updates
 
 .. image:: https://codecov.io/gh/xinbian/2dns/branch/master/graph/badge.svg
      :target: https://codecov.io/gh/xinbian/2dns
@@ -24,7 +17,7 @@ solve a 2D NS equation
 
 
 * Free software: MIT license
-* Documentation: https://python-2d-ns.readthedocs.io.
+* Documentation: https://2dns-2.readthedocs.io.
 
 
 Features
