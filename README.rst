@@ -17,6 +17,8 @@ python 2D NS
      :target: https://pyup.io/repos/github/xinbian/python_2d_ns/
      :alt: Updates
 
+.. image:: https://coveralls.io/repos/github/xinbian/python_2d_ns/badge.png?branch=master
+      :target: https://coveralls.io/github/xinbian/python_2d_ns?branch=master
 
 solve a 2D NS equation
 

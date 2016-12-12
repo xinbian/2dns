@@ -53,7 +53,8 @@ class TestPython_2d_ns(unittest.TestCase):
 
 
 
-
+if __name__ == '__main__':
+	sys.exit(unittest.main())
 
 
 
