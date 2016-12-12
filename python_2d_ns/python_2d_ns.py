@@ -73,8 +73,6 @@ def IC_coor(Nx, Ny, Np, dx, dy, rank, num_processes):
 	    x[0:Np,j]=range(Np);
     #offset for different threads
     x=x-(num_processes/2-rank)*Np
-    if num_processes ==1:
-        x=
     x=x*dx;
     for i in range(Np):
 	    y[i,0:Ny] =range(-Ny/2, Ny/2);
