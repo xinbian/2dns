@@ -1,5 +1,5 @@
 [run]
-source = 2dns
+source = python_2d_ns
 [report]
 include = python_2d_ns/*
 show_missing = True
