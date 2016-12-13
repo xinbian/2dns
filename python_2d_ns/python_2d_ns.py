@@ -20,16 +20,16 @@ sys.path.append(parent)
 #parameters
 new=1;
 forcing=1; #forcing type
-Nstep=3; #no. of steps
-N=Nx=Ny=1024; #grid size
+Nstep=2501; #no. of steps
+N=Nx=Ny=64; #grid size
 t=0;
 nu=5e-10; #viscosity
 nu_hypo=2e-3; #hypo-viscosity
 dt=5e-4; #time-step
 dt_h=dt/2; #half-time step
 ic_type=1 #1 for Taylor-Green init_cond; 2 for random init_cond
-k_ic=2;  #initial wavenumber for Taylor green forcing
-diag_out_step = 5000; #step frequency of outputting diagnostics
+k_ic=1;  #initial wavenumber for Taylor green forcing
+diag_out_step = 2500; #step frequency of outputting diagnostics
 
 #------------MPI setup---------
 comm = MPI.COMM_WORLD
@@ -49,10 +49,10 @@ U_mpi = empty (( num_processes , Np , Np ) , dtype = complex )
 
 #inverse FFT
 def ifftn_mpi(fu, u):
-    Uc_hat[:]=fftshift(ifft(ifftshift(fu) , axis=0))
+    Uc_hat[:]=ifftshift(ifft(fftshift(fu) , axis=0))
     comm.Alltoall([Uc_hat, MPI.DOUBLE_COMPLEX], [U_mpi, MPI.DOUBLE_COMPLEX])
     Uc_hatT[:] = rollaxis(U_mpi, 1).reshape(Uc_hatT.shape)
-    u[:]= fftshift(ifft (ifftshift(Uc_hatT), axis =1))
+    u[:]= ifftshift(ifft (fftshift(Uc_hatT), axis =1))
     return u
 #FFT
 def fftn_mpi(u, fu):
@@ -70,9 +70,12 @@ def IC_coor(Nx, Ny, Np, dx, dy, rank, num_processes):
     kx=zeros((Nx, Np), dtype=float);
     ky=zeros((Nx, Np), dtype=float);
     for j in range(Ny):
-	    x[0:Np,j]=range(Np);
-    #offset for different threads
-    x=x-(num_processes/2-rank)*Np
+        x[0:Np,j]=range(Np);
+        if num_processes == 1:
+            x[0:Nx,j] =range(-Nx/2, Nx/2);
+    #offset for mpi
+    if num_processes != 1:
+        x=x-(num_processes/2-rank)*Np
     x=x*dx;
     for i in range(Np):
 	    y[i,0:Ny] =range(-Ny/2, Ny/2);
@@ -81,10 +84,13 @@ def IC_coor(Nx, Ny, Np, dx, dy, rank, num_processes):
     for j in range(Np):
 	    kx[0:Nx,j]=range(-Nx/2, Nx/2);
     for i in range(Nx):
-	    ky[i,0:Np]=range(Np);
-    #offset for different threads
-    ky=ky-(num_processes/2-rank)*Np
-	
+        ky[i,0:Np]=range(Np);
+        if num_processes == 1:
+            ky[i,0:Ny]=range(-Ny/2, Ny/2);
+    #offset for mpi
+    if num_processes != 1:
+        ky=ky-(num_processes/2-rank)*Np
+        
     k2=kx**2+ky**2;
     for i in range(Nx):
 	    for j in range(Np):
@@ -145,7 +151,7 @@ def output(Wz, x, y, Nx, Ny, rank, time):
             Wz_all=asarray(Wz_all).reshape(Nx, Ny)
             x_all=asarray(x_all).reshape(Nx, Ny)
             y_all=asarray(y_all).reshape(Nx, Ny)
-            plt.contourf(x_all, y_all, Wz_all)
+            plt.contourf(x_all, y_all, Wz_all, 10,cmap=plt.cm.bone)
             delimiter = ''
             title = delimiter.join(['vorticity contour, time=', str(time)])
             plt.xlabel('x')
@@ -248,8 +254,8 @@ for istep in range(Nstep):
     #output vorticity contour
     if(istep%diag_out_step==0):
         output(Wz, x, y, Nx, Ny, rank, t)
-    t=t+dt;
-    if rank==0:
-        print 'simulation time'
-        print MPI.Wtime()-wt
+        if rank==0:
+            print 'simulation time'
+            print MPI.Wtime()-wt
 
+    t=t+dt;
