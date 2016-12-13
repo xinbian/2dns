@@ -19,15 +19,14 @@ sys.path.append(parent)
 
 #parameters
 new=1;
-forcing=1; #forcing type
 Nstep=2501; #no. of steps
-N=Nx=Ny=64; #grid size
+N=Nx=Ny=128; #grid size
 t=0;
 nu=5e-10; #viscosity
 nu_hypo=2e-3; #hypo-viscosity
-dt=5e-4; #time-step
+dt=5e-6; #time-step
 dt_h=dt/2; #half-time step
-ic_type=1 #1 for Taylor-Green init_cond; 2 for random init_cond
+ic_type=2 #1 for Taylor-Green init_cond; 2 for random init_cond
 k_ic=1;  #initial wavenumber for Taylor green forcing
 diag_out_step = 2500; #step frequency of outputting diagnostics
 
@@ -151,7 +150,7 @@ def output(Wz, x, y, Nx, Ny, rank, time):
             Wz_all=asarray(Wz_all).reshape(Nx, Ny)
             x_all=asarray(x_all).reshape(Nx, Ny)
             y_all=asarray(y_all).reshape(Nx, Ny)
-            plt.contourf(x_all, y_all, Wz_all, 10,cmap=plt.cm.bone)
+            plt.contourf(x_all, y_all, Wz_all)
             delimiter = ''
             title = delimiter.join(['vorticity contour, time=', str(time)])
             plt.xlabel('x')
