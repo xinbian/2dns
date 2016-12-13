@@ -24,7 +24,7 @@ N=Nx=Ny=128; #grid size
 t=0;
 nu=5e-10; #viscosity
 nu_hypo=2e-3; #hypo-viscosity
-dt=5e-6; #time-step
+dt=5e-7; #time-step
 dt_h=dt/2; #half-time step
 ic_type=2 #1 for Taylor-Green init_cond; 2 for random init_cond
 k_ic=1;  #initial wavenumber for Taylor green forcing
@@ -132,8 +132,8 @@ def IC_condition(ic_type, k_ic, kx, ky, Nx, Np):
         Vyhat=0.5*Vyhat;
     #generate random velocity field
     elif (new==1 and ic_type==2):
-        Vx=10*random.rand(Np,Ny)
-        Vy=10*random.rand(Np,Ny)
+        Vx=random.rand(Np,Ny)
+        Vy=random.rand(Np,Ny)
         Vxhat=fftn_mpi(Vx, Vxhat)
         Vyhat=fftn_mpi(Vy, Vyhat)     
     return Vxhat, Vyhat

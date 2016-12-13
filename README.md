@@ -32,10 +32,11 @@ The code is tested on [NESRSC cori supercomputer](http://www.nersc.gov/users/com
 Sample results
 -----------
 1. IC: Taylor-Green vortex (the vortex geometry will remain the same)
-![](https://pbs.twimg.com/media/CzhYsZAXAAIcZwd.jpg:large)
-![](https://pbs.twimg.com/media/CzhYtu7XgAA2aB3.jpg:large)
+![](https://pbs.twimg.com/media/CzhYsZAXAAIcZwd.jpg)
+![](https://pbs.twimg.com/media/CzhYtu7XgAA2aB3.jpg)
 2. IC: random velocity
-
+![](https://pbs.twimg.com/media/CzhlLMmWEAERJ02.jpg)
+![](https://pbs.twimg.com/media/CzhlNLqWEAAuxvC.jpg)
 
 
 Credits
