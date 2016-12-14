@@ -26,7 +26,7 @@ Usage
 
 Parallel
 ----------
-The code is tested on [NESRSC cori supercomputer](http://www.nersc.gov/users/computational-systems/cori/), up to 1024 cores with N=4096.
+The code is tested on [NERSC cori supercomputer](http://www.nersc.gov/users/computational-systems/cori/), up to 1024 cores with N=4096.
 ![alt text](https://pbs.twimg.com/media/CzhTly9WQAEY1up.jpg:large "parallel")
 
 Sample results
