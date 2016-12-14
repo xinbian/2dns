@@ -28,6 +28,7 @@ class TestPython_2d_ns(unittest.TestCase):
     #x coordinate for rank 2 should start from 0
     def test_IC_coor_x_coor(self):
         x, y, kx, ky, k2, k2_exp=IC_coor(64, 64, 32, 1, 1, 1, 2)
+        #this coordinate should be 0
         self.assertTrue(x[0,2]==0)
     #test initial condition, Taylor green forcing, test whether the value is given on specific wavenumber
     def test_IC_con(self):
@@ -48,6 +49,16 @@ class TestPython_2d_ns(unittest.TestCase):
     	#this should be zero
     	self.assertTrue(Vxhat[Nx-1,Np-1]==0)
     	self.assertTrue(Vyhat[Nx-1,Np-1]==0)
+    #test FFT and IFFT. Take FFT and IFFT on array, it will transform back (with some numerical errors)
+    def test_FFT(self):
+        testa=zeros((Np, Ny), dtype=float);
+        testahat=empty(( N, Np) , dtype = complex )
+        if rank==0:      
+            testa[2,0]=1
+        testa=ifftn_mpi(fftn_mpi(testa, testahat), testa)
+        #after FFT and IFFT, this value should be the same
+        if rank==0:
+            self.assertTrue(testa[2,0]-1<0.0001)
 
 
 
