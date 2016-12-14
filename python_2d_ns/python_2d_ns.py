@@ -19,7 +19,7 @@ sys.path.append(parent)
 
 #parameters
 new=1;
-Nstep=2501; #no. of steps
+Nstep=2500; #no. of steps
 N=Nx=Ny=64; #grid size
 t=0;
 nu=5e-10; #viscosity
@@ -199,7 +199,7 @@ Vxhat_t0 = Vxhat;
 Vyhat_t0 = Vyhat;
 #
 #----Main Loop-----------
-for istep in range(Nstep):
+for istep in range(Nstep+1):
     if rank==0:
         wt=MPI.Wtime()
     #------Dealiasing
